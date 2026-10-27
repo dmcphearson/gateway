@@ -985,6 +985,80 @@ class SessionManager {
     private var expiryRefreshTime: Date? = nil
     private let healthCheckInterval: TimeInterval = 300 // 5 minutes
 
+    private nonisolated let tokenRefresher = SSOTokenRefresher()
+    private var refreshingSSOSessions: Set<String> = []
+
+    /// The sso-session a profile signs in through: its own for SSO profiles,
+    /// the source's for IAM role profiles chained from one.
+    nonisolated func ssoSessionName(for profileName: String) -> String? {
+        if let name = ConfigManager.shared.getSSOSessionName(for: profileName) {
+            return name
+        }
+        if let iamProfile = ConfigManager.shared.getProfile(profileName) as? IAMProfile,
+           !iamProfile.ssoSession.isEmpty {
+            return iamProfile.ssoSession
+        }
+        return nil
+    }
+
+    /// Refreshes the SSO access token of every sso-session behind the active
+    /// profiles (once per session, however many profiles share it).
+    private func keepSSOTokensFresh() {
+        let profileNames = Array(activeSessions.keys)
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            let profilesBySession = Dictionary(grouping: profileNames) { self.ssoSessionName(for: $0) }
+            for case let (sessionName?, profiles) in profilesBySession {
+                let claimed = await MainActor.run { self.refreshingSSOSessions.insert(sessionName).inserted }
+                guard claimed else { continue }
+                let outcome = await self.refreshSSOToken(sessionName: sessionName)
+                await MainActor.run {
+                    self.refreshingSSOSessions.remove(sessionName)
+                    self.applySSOTokenOutcome(outcome, profiles: profiles)
+                }
+            }
+        }
+    }
+
+    private nonisolated func refreshSSOToken(sessionName: String) async -> SSOTokenRefresher.Outcome {
+        let outcome = await tokenRefresher.refreshIfNeeded(sessionName: sessionName)
+        switch outcome {
+        case .refreshed(let expiresAt):
+            print("[AWSCLIGateway] SSO token for session \(sessionName) refreshed, expires \(expiresAt)")
+        case .needsLogin(let reason), .failed(let reason):
+            print("[AWSCLIGateway] Error: \(reason)")
+        case .fresh, .alreadyRefreshed:
+            break
+        }
+        return outcome
+    }
+
+    private func applySSOTokenOutcome(_ outcome: SSOTokenRefresher.Outcome, profiles: [String]) {
+        for profileName in profiles where activeSessions[profileName] != nil {
+            switch outcome {
+            case .refreshed(let expiresAt):
+                activeSessions[profileName]?.ssoTokenExpiryDate = expiresAt
+                fallthrough
+            case .alreadyRefreshed:
+                // A refresh that just worked proves the session can renew;
+                // clear a yellow state left by an earlier failure or probe.
+                if activeSessions[profileName]?.status == .reauthRequired {
+                    activeSessions[profileName]?.status = .active
+                    activeSessions[profileName]?.ssoSessionAlive = true
+                }
+            case .needsLogin:
+                // Role creds may still work for the CLI, but SDK tools that use
+                // the SSO token (Terraform) are already failing: show yellow.
+                if activeSessions[profileName]?.status == .active {
+                    activeSessions[profileName]?.status = .reauthRequired
+                }
+            case .fresh, .failed:
+                break
+            }
+        }
+        onSessionsUpdated?(activeSessions)
+    }
+
     private func checkSessionStatus() {
         guard !activeSessions.isEmpty else { return }
 
@@ -993,6 +1067,7 @@ class SessionManager {
         // Every 60 seconds: re-read cache files for all active sessions
         if expiryRefreshTime == nil || now.timeIntervalSince(expiryRefreshTime!) > 60 {
             expiryRefreshTime = now
+            keepSSOTokensFresh()
 
             for (profileName, session) in activeSessions {
                 let cacheNameHint = session.cacheFileName ?? profileCacheFileMap[profileName]

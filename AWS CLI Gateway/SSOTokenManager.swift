@@ -231,7 +231,7 @@ class SSOTokenManager {
                 if let token = try? decoder.decode(SSOToken.self, from: data) {
                     // Match by session name (from file content or filename hash)
                     if let sessionName = ssoSessionName {
-                        if token.sessionName == sessionName || file.deletingPathExtension().lastPathComponent == sha1Hash(sessionName) {
+                        if token.sessionName == sessionName || file.deletingPathExtension().lastPathComponent == Self.sha1Hash(sessionName) {
                             return token
                         }
                     } else if token.startUrl != nil && token.accessToken != nil && token.expiresAt > Date() {
@@ -335,7 +335,7 @@ class SSOTokenManager {
         }
 
         if let hashInput = hashInput {
-            let hash = sha1Hash(hashInput)
+            let hash = Self.sha1Hash(hashInput)
             let potentialTokenFile = cacheDirPath.appendingPathComponent("\(hash).json")
             if FileManager.default.fileExists(atPath: potentialTokenFile.path) {
                 return potentialTokenFile
@@ -379,7 +379,7 @@ class SSOTokenManager {
         let cacheDirPath = homeDir.appendingPathComponent(".aws/sso/cache")
 
         // Try hash of just startUrl first (legacy botocore behavior)
-        let hash = sha1Hash(startUrl)
+        let hash = Self.sha1Hash(startUrl)
         let potentialTokenFile = cacheDirPath.appendingPathComponent("\(hash).json")
         if FileManager.default.fileExists(atPath: potentialTokenFile.path) {
             return potentialTokenFile
@@ -405,7 +405,7 @@ class SSOTokenManager {
     }
 
     // SHA1 hash function (simplified version)
-    private func sha1Hash(_ string: String) -> String {
+    static func sha1Hash(_ string: String) -> String {
         let data = Data(string.utf8)
         var digest = [UInt8](repeating: 0, count: Int(CC_SHA1_DIGEST_LENGTH))
 
@@ -414,5 +414,166 @@ class SSOTokenManager {
         }
 
         return digest.map { String(format: "%02hhx", $0) }.joined()
+    }
+}
+
+// MARK: - SSO Token Refresh
+
+/// Keeps the SSO access token for an `sso-session` fresh in ~/.aws/sso/cache.
+///
+/// Tools that resolve SSO profiles themselves (Terraform and the other Go SDK
+/// users) read this token, not the AWS CLI's role credentials in
+/// ~/.aws/cli/cache. The access token lives ~1h and nothing refreshes it while
+/// the CLI keeps working from cached role credentials, so those tools fail
+/// even though the app's countdown looks healthy.
+struct SSOTokenRefresher: Sendable {
+    enum Outcome: Equatable {
+        /// Token has more than `refreshWindow` left; nothing to do.
+        case fresh
+        /// Token refreshed and written back.
+        case refreshed(expiresAt: Date)
+        /// Another tool rotated the refresh token while we were refreshing.
+        case alreadyRefreshed
+        /// The refresh token or client registration is unusable; the user has
+        /// to run `aws sso login --sso-session <name>`.
+        case needsLogin(String)
+        /// Transient failure (network, server error); try again next cycle.
+        case failed(String)
+    }
+
+    typealias Transport = @Sendable (URLRequest) async throws -> (Data, URLResponse)
+
+    /// Start refreshing this long before expiry: ahead of the AWS CLI (15 min)
+    /// and Go SDK (5 min) windows, so the app is normally the only refresher
+    /// and two tools never race the same rotating refresh token.
+    static let refreshWindow: TimeInterval = 20 * 60
+
+    let cacheDirectory: URL
+    let transport: Transport
+
+    init(cacheDirectory: URL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".aws/sso/cache"),
+         transport: @escaping Transport = { try await URLSession.shared.data(for: $0) }) {
+        self.cacheDirectory = cacheDirectory
+        self.transport = transport
+    }
+
+    /// botocore and the Go SDK name the token file sha1(session name).
+    func tokenFile(forSession sessionName: String) -> URL {
+        cacheDirectory.appendingPathComponent("\(SSOTokenManager.sha1Hash(sessionName)).json")
+    }
+
+    func refreshIfNeeded(sessionName: String, now: Date = Date()) async -> Outcome {
+        let file = tokenFile(forSession: sessionName)
+        guard let token = readToken(file) else {
+            return .needsLogin("No SSO token cached for session \(sessionName)")
+        }
+
+        if let expiresAt = date(token["expiresAt"]),
+           expiresAt.timeIntervalSince(now) > Self.refreshWindow {
+            return .fresh
+        }
+
+        guard let refreshToken = token["refreshToken"] as? String,
+              let clientId = token["clientId"] as? String,
+              let clientSecret = token["clientSecret"] as? String,
+              let region = token["region"] as? String else {
+            return .needsLogin("SSO token for session \(sessionName) has no refresh token")
+        }
+        if let registrationExpiresAt = date(token["registrationExpiresAt"]), registrationExpiresAt <= now {
+            return .needsLogin("SSO client registration for session \(sessionName) has expired")
+        }
+
+        guard let url = URL(string: "https://oidc.\(region).amazonaws.com/token") else {
+            return .failed("Invalid SSO region \(region)")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "clientId": clientId,
+            "clientSecret": clientSecret,
+            "grantType": "refresh_token",
+            "refreshToken": refreshToken,
+        ])
+
+        let data: Data
+        let status: Int
+        do {
+            let (body, response) = try await transport(request)
+            data = body
+            status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        } catch {
+            return .failed("SSO token refresh request failed: \(error.localizedDescription)")
+        }
+
+        let body = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+
+        guard status == 200 else {
+            let error = (body["error"] as? String) ?? (body["__type"] as? String) ?? "HTTP \(status)"
+            guard error == "invalid_grant" || error.contains("InvalidGrant") || error == "invalid_client" else {
+                return .failed("SSO token refresh failed: \(error)")
+            }
+            // The refresh token is rejected. If another tool rotated it while
+            // we were refreshing, the session is fine; otherwise it's dead.
+            if let current = readToken(file), current["refreshToken"] as? String != refreshToken {
+                return .alreadyRefreshed
+            }
+            return .needsLogin("SSO refresh token for session \(sessionName) was rejected (\(error))")
+        }
+
+        guard let accessToken = body["accessToken"] as? String,
+              let expiresIn = (body["expiresIn"] as? NSNumber)?.doubleValue else {
+            return .failed("SSO token refresh returned an unexpected response")
+        }
+
+        // Update in place so fields other tools rely on (startUrl, clientId,
+        // registrationExpiresAt, ...) are preserved.
+        let expiresAt = now.addingTimeInterval(expiresIn)
+        var updated = token
+        updated["accessToken"] = accessToken
+        updated["expiresAt"] = Self.formatDate(expiresAt)
+        if let rotated = body["refreshToken"] as? String {
+            updated["refreshToken"] = rotated
+        }
+
+        do {
+            try writeToken(updated, to: file)
+        } catch {
+            return .failed("Could not write SSO token cache: \(error.localizedDescription)")
+        }
+        return .refreshed(expiresAt: expiresAt)
+    }
+
+    private func readToken(_ file: URL) -> [String: Any]? {
+        guard let data = try? Data(contentsOf: file) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+    }
+
+    /// Writes via a 0600 temp file and rename so readers never see a partial
+    /// file and the token is never world-readable.
+    private func writeToken(_ token: [String: Any], to file: URL) throws {
+        let data = try JSONSerialization.data(withJSONObject: token)
+        let temp = file.deletingLastPathComponent()
+            .appendingPathComponent(".\(file.lastPathComponent).\(UUID().uuidString).tmp")
+        guard FileManager.default.createFile(atPath: temp.path, contents: data,
+                                             attributes: [.posixPermissions: 0o600]) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        if rename(temp.path, file.path) != 0 {
+            let code = errno
+            try? FileManager.default.removeItem(at: temp)
+            throw POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
+        }
+    }
+
+    private func date(_ value: Any?) -> Date? {
+        (value as? String).flatMap(SSOTokenManager.parseISO8601)
+    }
+
+    /// botocore writes `2026-01-01T13:00:00Z` (UTC, no fractional seconds).
+    private static func formatDate(_ date: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.string(from: date)
     }
 }
