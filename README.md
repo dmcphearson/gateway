@@ -62,8 +62,11 @@ Version 1.0 is a ground-up redesign of Gateway.
 Install with [Homebrew](https://brew.sh):
 
 ```bash
+brew trust dmcphearson/tap
 brew install --cask dmcphearson/tap/gateway
 ```
+
+Homebrew 7 only loads third-party taps you have trusted; the first line does that once.
 
 Update with `brew upgrade --cask gateway`. Or download the latest release from the [Releases](https://github.com/dmcphearson/gateway/releases) page and move `Gateway.app` to your Applications folder.
 
