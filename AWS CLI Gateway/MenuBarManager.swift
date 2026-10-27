@@ -169,6 +169,9 @@ struct ConnectedProfileRow: View {
                     if let expires = profile.expiresAtLocal {
                         DetailRow(label: "Expires", value: expires)
                     }
+                    if let ssoToken = profile.ssoTokenState {
+                        DetailRow(label: "SSO token", value: ssoToken)
+                    }
 
                     HStack(spacing: 8) {
                         Spacer()
@@ -315,6 +318,7 @@ struct ProfileDisplayInfo {
     var roleName: String?
     var region: String?
     var expiresAtLocal: String?
+    var ssoTokenState: String?
 }
 
 @MainActor
@@ -359,7 +363,8 @@ class StatusBarViewModel: ObservableObject {
                 accountId: ssoProfile?.accountId,
                 roleName: ssoProfile?.roleName,
                 region: ssoProfile?.region,
-                expiresAtLocal: expiresLocal
+                expiresAtLocal: expiresLocal,
+                ssoTokenState: session?.ssoTokenSummary()
             )
         }
 
@@ -510,6 +515,12 @@ class MenuBarManager: NSObject {
                             let newTime = session.formattedTimeRemaining
                             if self.viewModel.connectedProfiles[i].timeRemaining != newTime {
                                 self.viewModel.connectedProfiles[i].timeRemaining = newTime
+                                self.viewModel.connectedProfiles[i].status = session.status
+                                changed = true
+                            }
+                            let ssoTokenState = session.ssoTokenSummary()
+                            if self.viewModel.connectedProfiles[i].ssoTokenState != ssoTokenState {
+                                self.viewModel.connectedProfiles[i].ssoTokenState = ssoTokenState
                                 self.viewModel.connectedProfiles[i].status = session.status
                                 changed = true
                             }

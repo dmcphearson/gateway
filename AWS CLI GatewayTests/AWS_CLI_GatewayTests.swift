@@ -198,3 +198,35 @@ struct SSOLoginArgumentsTests {
                 == ["sso", "login", "--profile", "dev-admin"])
     }
 }
+
+struct SSOTokenSummaryTests {
+    let now = Date(timeIntervalSince1970: 1_767_268_800)
+
+    func session(ssoExpiresIn: TimeInterval?, status: ProfileSessionStatus = .active) -> ProfileSession {
+        ProfileSession(profileName: "dev-admin",
+                       roleCredExpiryDate: now.addingTimeInterval(10 * 3600),
+                       ssoTokenExpiryDate: ssoExpiresIn.map { now.addingTimeInterval($0) },
+                       status: status)
+    }
+
+    @Test func showsMinutesLeft() {
+        #expect(session(ssoExpiresIn: 42 * 60 + 30).ssoTokenSummary(now: now) == "Valid, 42m left")
+    }
+
+    @Test func showsHoursAndMinutesLeft() {
+        #expect(session(ssoExpiresIn: 65 * 60).ssoTokenSummary(now: now) == "Valid, 1h 5m left")
+    }
+
+    @Test func showsExpiredWhileRoleCredentialsStillRun() {
+        #expect(session(ssoExpiresIn: -60).ssoTokenSummary(now: now) == "Expired")
+    }
+
+    @Test func showsSignInWhenRefreshFailed() {
+        #expect(session(ssoExpiresIn: 30 * 60, status: .reauthRequired).ssoTokenSummary(now: now)
+                == "Can't refresh, sign in again")
+    }
+
+    @Test func hiddenWithoutAnSSOToken() {
+        #expect(session(ssoExpiresIn: nil).ssoTokenSummary(now: now) == nil)
+    }
+}
