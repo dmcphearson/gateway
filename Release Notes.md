@@ -1,5 +1,16 @@
 # Release Notes
 
+## Version 1.0.3
+
+- Renamed to **Gateway**. Settings, connected profiles and the `gateway` command carry over unchanged.
+- Now installable with Homebrew: `brew install --cask dmcphearson/tap/gateway`, updated with `brew upgrade --cask gateway`. If you installed AWS CLI Gateway by hand, quit it and delete `/Applications/AWS CLI Gateway.app` first.
+- Terraform and other AWS SDK tools keep working: the SSO token in `~/.aws/sso/cache`, which they use instead of the CLI's role credentials, is refreshed before its one-hour expiry. Previously it lapsed while the countdown and the AWS CLI still looked healthy, and Terraform failed with `InvalidGrantException`.
+- Refresh and Sign In now renew the SSO token too, signing in with `aws sso login --sso-session` when the profile uses an SSO session.
+- The profile details show the SSO token's state next to the role-credential countdown, and the profile turns yellow when that token can no longer refresh.
+- The menu bar item keeps its position and stays visible, and the panel stays on screen near display edges.
+
+---
+
 ## Version 1.0.2
 
 - Fixed a session-monitoring crash caused by a data race on shared session state
