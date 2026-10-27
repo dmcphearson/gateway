@@ -186,3 +186,15 @@ struct SSOTokenRefresherTests {
         guard case .failed = outcome else { Issue.record("expected failed, got \(outcome)"); return }
     }
 }
+
+struct SSOLoginArgumentsTests {
+    @Test func signsInThroughTheSSOSessionWhenThereIsOne() {
+        #expect(SessionManager.ssoLoginArguments(profileName: "dev-admin", sessionName: "corp")
+                == ["sso", "login", "--sso-session", "corp"])
+    }
+
+    @Test func fallsBackToTheProfileForLegacyConfig() {
+        #expect(SessionManager.ssoLoginArguments(profileName: "dev-admin", sessionName: nil)
+                == ["sso", "login", "--profile", "dev-admin"])
+    }
+}

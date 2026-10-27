@@ -390,7 +390,9 @@ class StatusBarViewModel: ObservableObject {
             }
 
             // Re-login (opens browser, gets fresh SSO token + refresh token)
-            _ = try? await CommandRunner.shared.runCommand("aws", args: ["sso", "login", "--profile", name])
+            let loginArgs = SessionManager.ssoLoginArguments(
+                profileName: name, sessionName: SessionManager.shared.ssoSessionName(for: name))
+            _ = try? await CommandRunner.shared.runCommand("aws", args: loginArgs)
             try? await Task.sleep(nanoseconds: 1_000_000_000)
 
             // Force new role credentials into the cache
