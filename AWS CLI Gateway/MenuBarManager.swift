@@ -489,11 +489,27 @@ class MenuBarManager: NSObject {
         Task { @MainActor in
             statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
+            // A named autosave gives the item a persisted slot in the menu bar.
+            // Without it macOS recomputes a position on every layout pass and can
+            // park the item outside the visible bounds of the display.
+            statusItem?.autosaveName = "AWSCLIGatewayStatusItem"
+            statusItem?.isVisible = true
+
             if let button = statusItem?.button {
-                button.image = NSImage(named: "cloud-lock")
-                button.image?.isTemplate = true
+                if let image = NSImage(named: "cloud-lock") {
+                    image.size = NSSize(width: 18, height: 18)
+                    image.isTemplate = true
+                    button.image = image
+                } else {
+                    // Never leave the button empty — a variableLength item with no
+                    // image collapses to zero width and becomes unclickable.
+                    button.title = "AWS"
+                    print("[AWSCLIGateway] Error: cloud-lock image failed to load, using text fallback")
+                }
                 button.action = #selector(togglePanel)
                 button.target = self
+            } else {
+                print("[AWSCLIGateway] Error: status item button unavailable")
             }
 
             // No NSMenu — we use a panel instead
@@ -575,11 +591,20 @@ class MenuBarManager: NSObject {
             self?.panel = nil
         }
 
-        // Position below the status bar item
+        // Position below the status bar item, clamped to the screen so the panel
+        // stays reachable even when the item sits near an edge of the display.
         let buttonRect = button.convert(button.bounds, to: nil)
         let screenRect = buttonWindow.convertToScreen(buttonRect)
-        let panelX = screenRect.midX - panelRect.width / 2
-        let panelY = screenRect.minY - panelRect.height - 4
+        var panelX = screenRect.midX - panelRect.width / 2
+        var panelY = screenRect.minY - panelRect.height - 4
+
+        if let visible = (buttonWindow.screen ?? NSScreen.main)?.visibleFrame {
+            let margin: CGFloat = 8
+            let maxX = max(visible.minX + margin, visible.maxX - panelRect.width - margin)
+            panelX = min(max(panelX, visible.minX + margin), maxX)
+            panelY = max(panelY, visible.minY + margin)
+        }
+
         newPanel.setFrameOrigin(NSPoint(x: panelX, y: panelY))
 
         newPanel.makeKeyAndOrderFront(nil)
