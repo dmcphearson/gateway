@@ -11,7 +11,7 @@ class ScriptManager {
         let scriptContent = """
 #!/bin/bash
 
-# AWS CLI Gateway v2.0.0
+# Gateway v2.0.0
 # Interactive profile selection with per-terminal session persistence
 
 PROFILE_HISTORY="$HOME/Library/Application Support/AWS CLI Gateway/profile_history.json"
@@ -25,7 +25,7 @@ mkdir -p "$SESSION_DIR"
 
 function check_requirements() {
     if [ ! -f "$PROFILE_HISTORY" ]; then
-        echo "Error: Profile history not found. Run AWS CLI Gateway app first." >&2
+        echo "Error: Profile history not found. Run the Gateway app first." >&2
         exit 1
     fi
     if [ ! -x "$AWS_CMD" ]; then
@@ -57,7 +57,7 @@ function interactive_select() {
     local COUNT=${#NAMES[@]}
 
     if [ "$COUNT" -eq 0 ]; then
-        echo "No active sessions. Connect a profile in AWS CLI Gateway first." >&2
+        echo "No active sessions. Connect a profile in Gateway first." >&2
         exit 1
     fi
 
@@ -239,7 +239,7 @@ function debug_info() {
 }
 
 function show_help() {
-    echo "AWS CLI Gateway v2.0.0"
+    echo "Gateway v2.0.0"
     echo ""
     echo "USAGE:"
     echo "  gateway [OPTIONS] [AWS_COMMAND] [ARGS...]"

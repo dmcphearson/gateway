@@ -23,7 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if MenuBarManager.shared.hasActiveSession() {
             let alert = NSAlert()
-            alert.messageText = "Quit AWS SSO Gateway"
+            alert.messageText = "Quit Gateway"
             alert.informativeText = "Would you like to clear your active SSO session cache before quitting?"
             alert.addButton(withTitle: "Quit & Clear Cache")
             alert.addButton(withTitle: "Just Quit")

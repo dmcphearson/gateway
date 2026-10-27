@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCHEME="AWS CLI Gateway"
 CONFIGURATION="${1:-Release}"
 DERIVED_DATA="$SCRIPT_DIR/build"
-APP_NAME="AWS CLI Gateway.app"
+APP_NAME="Gateway.app"
 CODESIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
 
 echo "=== Building $SCHEME ($CONFIGURATION) ==="

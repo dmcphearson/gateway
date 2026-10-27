@@ -1048,9 +1048,9 @@ class SessionManager {
         let outcome = await tokenRefresher.refreshIfNeeded(sessionName: sessionName)
         switch outcome {
         case .refreshed(let expiresAt):
-            print("[AWSCLIGateway] SSO token for session \(sessionName) refreshed, expires \(expiresAt)")
+            print("[Gateway] SSO token for session \(sessionName) refreshed, expires \(expiresAt)")
         case .needsLogin(let reason), .failed(let reason):
-            print("[AWSCLIGateway] Error: \(reason)")
+            print("[Gateway] Error: \(reason)")
         case .fresh, .alreadyRefreshed:
             break
         }

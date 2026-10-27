@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import AWS_CLI_Gateway
+@testable import Gateway
 
 /// Records requests and replies with a canned response, or runs `onRequest`
 /// to simulate another tool touching the token file mid-refresh.

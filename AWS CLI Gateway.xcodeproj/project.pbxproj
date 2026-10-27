@@ -513,7 +513,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "AWS-CLI-Gateway-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "AWS CLI Gateway";
+				INFOPLIST_KEY_CFBundleDisplayName = Gateway;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -524,7 +524,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gateway";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Gateway;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -550,7 +550,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "AWS-CLI-Gateway-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "AWS CLI Gateway";
+				INFOPLIST_KEY_CFBundleDisplayName = Gateway;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -561,7 +561,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gateway";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Gateway;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -582,7 +582,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AWS CLI Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AWS CLI Gateway";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Gateway";
 			};
 			name = Debug;
 		};
@@ -600,7 +600,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AWS CLI Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AWS CLI Gateway";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Gateway";
 			};
 			name = Release;
 		};

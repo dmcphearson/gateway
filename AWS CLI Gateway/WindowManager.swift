@@ -71,7 +71,7 @@ class WindowManager {
     func showSettingsWindow() {
         showWindow(
             id: "settings",
-            title: "AWS CLI Gateway Settings",
+            title: "Gateway Settings",
             size: NSSize(width: 580, height: 450),
             style: [.titled, .closable, .resizable, .fullSizeContentView],
             content: SettingsView(onClose: { self.closeWindow(id: "settings") })

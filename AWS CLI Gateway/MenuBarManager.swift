@@ -504,12 +504,12 @@ class MenuBarManager: NSObject {
                     // Never leave the button empty — a variableLength item with no
                     // image collapses to zero width and becomes unclickable.
                     button.title = "AWS"
-                    print("[AWSCLIGateway] Error: cloud-lock image failed to load, using text fallback")
+                    print("[Gateway] Error: cloud-lock image failed to load, using text fallback")
                 }
                 button.action = #selector(togglePanel)
                 button.target = self
             } else {
-                print("[AWSCLIGateway] Error: status item button unavailable")
+                print("[Gateway] Error: status item button unavailable")
             }
 
             // No NSMenu — we use a panel instead
@@ -920,7 +920,7 @@ class MenuBarManager: NSObject {
 
     private func showReauthRequiredNotification(profileName: String) {
         let content = UNMutableNotificationContent()
-        content.title = "AWS CLI Gateway"
+        content.title = "Gateway"
         content.body = "AWS session for '\(profileName)' can't auto-renew — sign in again within the hour to stay connected."
         content.sound = .default
 
@@ -937,7 +937,7 @@ class MenuBarManager: NSObject {
 
     private func showTokenExpiredNotification(profileName: String) {
         let content = UNMutableNotificationContent()
-        content.title = "AWS CLI Gateway"
+        content.title = "Gateway"
         content.body = "Your AWS SSO session for '\(profileName)' has expired. Please refresh to continue."
         content.sound = .default
 
@@ -957,7 +957,7 @@ class MenuBarManager: NSObject {
         let seconds = Int(timeUntilExpiry.truncatingRemainder(dividingBy: 60))
 
         let content = UNMutableNotificationContent()
-        content.title = "AWS CLI Gateway"
+        content.title = "Gateway"
 
         if isCritical {
             content.body = "Your AWS SSO session for '\(profileName)' expires in \(seconds) seconds!"
