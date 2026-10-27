@@ -169,6 +169,9 @@ struct ConnectedProfileRow: View {
                     if let expires = profile.expiresAtLocal {
                         DetailRow(label: "Expires", value: expires)
                     }
+                    if let ssoToken = profile.ssoTokenState {
+                        DetailRow(label: "SSO token", value: ssoToken)
+                    }
 
                     HStack(spacing: 8) {
                         Spacer()
@@ -315,6 +318,7 @@ struct ProfileDisplayInfo {
     var roleName: String?
     var region: String?
     var expiresAtLocal: String?
+    var ssoTokenState: String?
 }
 
 @MainActor
@@ -359,7 +363,8 @@ class StatusBarViewModel: ObservableObject {
                 accountId: ssoProfile?.accountId,
                 roleName: ssoProfile?.roleName,
                 region: ssoProfile?.region,
-                expiresAtLocal: expiresLocal
+                expiresAtLocal: expiresLocal,
+                ssoTokenState: session?.ssoTokenSummary()
             )
         }
 
@@ -390,7 +395,9 @@ class StatusBarViewModel: ObservableObject {
             }
 
             // Re-login (opens browser, gets fresh SSO token + refresh token)
-            _ = try? await CommandRunner.shared.runCommand("aws", args: ["sso", "login", "--profile", name])
+            let loginArgs = SessionManager.ssoLoginArguments(
+                profileName: name, sessionName: SessionManager.shared.ssoSessionName(for: name))
+            _ = try? await CommandRunner.shared.runCommand("aws", args: loginArgs)
             try? await Task.sleep(nanoseconds: 1_000_000_000)
 
             // Force new role credentials into the cache
@@ -482,11 +489,27 @@ class MenuBarManager: NSObject {
         Task { @MainActor in
             statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
+            // A named autosave gives the item a persisted slot in the menu bar.
+            // Without it macOS recomputes a position on every layout pass and can
+            // park the item outside the visible bounds of the display.
+            statusItem?.autosaveName = "AWSCLIGatewayStatusItem"
+            statusItem?.isVisible = true
+
             if let button = statusItem?.button {
-                button.image = NSImage(named: "cloud-lock")
-                button.image?.isTemplate = true
+                if let image = NSImage(named: "cloud-lock") {
+                    image.size = NSSize(width: 18, height: 18)
+                    image.isTemplate = true
+                    button.image = image
+                } else {
+                    // Never leave the button empty — a variableLength item with no
+                    // image collapses to zero width and becomes unclickable.
+                    button.title = "AWS"
+                    print("[Gateway] Error: cloud-lock image failed to load, using text fallback")
+                }
                 button.action = #selector(togglePanel)
                 button.target = self
+            } else {
+                print("[Gateway] Error: status item button unavailable")
             }
 
             // No NSMenu — we use a panel instead
@@ -508,6 +531,12 @@ class MenuBarManager: NSObject {
                             let newTime = session.formattedTimeRemaining
                             if self.viewModel.connectedProfiles[i].timeRemaining != newTime {
                                 self.viewModel.connectedProfiles[i].timeRemaining = newTime
+                                self.viewModel.connectedProfiles[i].status = session.status
+                                changed = true
+                            }
+                            let ssoTokenState = session.ssoTokenSummary()
+                            if self.viewModel.connectedProfiles[i].ssoTokenState != ssoTokenState {
+                                self.viewModel.connectedProfiles[i].ssoTokenState = ssoTokenState
                                 self.viewModel.connectedProfiles[i].status = session.status
                                 changed = true
                             }
@@ -562,11 +591,20 @@ class MenuBarManager: NSObject {
             self?.panel = nil
         }
 
-        // Position below the status bar item
+        // Position below the status bar item, clamped to the screen so the panel
+        // stays reachable even when the item sits near an edge of the display.
         let buttonRect = button.convert(button.bounds, to: nil)
         let screenRect = buttonWindow.convertToScreen(buttonRect)
-        let panelX = screenRect.midX - panelRect.width / 2
-        let panelY = screenRect.minY - panelRect.height - 4
+        var panelX = screenRect.midX - panelRect.width / 2
+        var panelY = screenRect.minY - panelRect.height - 4
+
+        if let visible = (buttonWindow.screen ?? NSScreen.main)?.visibleFrame {
+            let margin: CGFloat = 8
+            let maxX = max(visible.minX + margin, visible.maxX - panelRect.width - margin)
+            panelX = min(max(panelX, visible.minX + margin), maxX)
+            panelY = max(panelY, visible.minY + margin)
+        }
+
         newPanel.setFrameOrigin(NSPoint(x: panelX, y: panelY))
 
         newPanel.makeKeyAndOrderFront(nil)
@@ -882,7 +920,7 @@ class MenuBarManager: NSObject {
 
     private func showReauthRequiredNotification(profileName: String) {
         let content = UNMutableNotificationContent()
-        content.title = "AWS CLI Gateway"
+        content.title = "Gateway"
         content.body = "AWS session for '\(profileName)' can't auto-renew — sign in again within the hour to stay connected."
         content.sound = .default
 
@@ -899,7 +937,7 @@ class MenuBarManager: NSObject {
 
     private func showTokenExpiredNotification(profileName: String) {
         let content = UNMutableNotificationContent()
-        content.title = "AWS CLI Gateway"
+        content.title = "Gateway"
         content.body = "Your AWS SSO session for '\(profileName)' has expired. Please refresh to continue."
         content.sound = .default
 
@@ -919,7 +957,7 @@ class MenuBarManager: NSObject {
         let seconds = Int(timeUntilExpiry.truncatingRemainder(dividingBy: 60))
 
         let content = UNMutableNotificationContent()
-        content.title = "AWS CLI Gateway"
+        content.title = "Gateway"
 
         if isCritical {
             content.body = "Your AWS SSO session for '\(profileName)' expires in \(seconds) seconds!"

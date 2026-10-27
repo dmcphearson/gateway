@@ -1,4 +1,4 @@
-# AWS CLI Gateway
+# Gateway
 
 <p align="center">
     <img src="AWS CLI Gateway/Assets.xcassets/AppIcon.appiconset/aws-cli-gateway-app-icon-iOS-Default-512x512@1x.png" width="128">
@@ -10,13 +10,13 @@ A macOS menu bar application for managing AWS SSO profiles and sessions. Monitor
 
 ## What's New in v1.0.0
 
-Version 1.0 is a ground-up redesign of AWS CLI Gateway.
+Version 1.0 is a ground-up redesign of Gateway.
 
 **Completely new interface** — The legacy NSMenu dropdown has been replaced with a floating NSPanel powered by SwiftUI. Profiles are displayed as interactive rows with expandable detail sections showing region, account ID, role, and token expiry. Connect, disconnect, and refresh sessions without ever leaving the menu bar.
 
 **Multi-profile session monitoring** — Track up to 5 concurrent AWS SSO sessions simultaneously. Each profile gets its own countdown timer, health check cycle, and status indicator. Sessions are automatically restored when the app launches.
 
-**Intelligent session management** — Dual-layer token tracking monitors both role credentials (~1h lifespan) and SSO session tokens (~8h lifespan) independently. Proactive credential refresh kicks in 15 minutes before expiry, keeping `~/.aws/cli/cache` fresh for tools like Terraform and AWS SDKs. Health checks run every 5 minutes via `sts get-caller-identity` to catch dead sessions early.
+**Intelligent session management** — Dual-layer token tracking monitors both role credentials (~1h lifespan) and SSO session tokens (~8h lifespan) independently. Proactive credential refresh kicks in 15 minutes before expiry, keeping `~/.aws/cli/cache` fresh for the AWS CLI, and the SSO token in `~/.aws/sso/cache` is refreshed before it expires so Terraform and other AWS SDK tools keep working. Health checks run every 5 minutes via `sts get-caller-identity` to catch dead sessions early.
 
 **Redesigned notifications** — Per-profile expiry warnings at configurable thresholds (1h, 30m, 10m, 5m, 1m) with actionable "Refresh" buttons. Notification deduplication prevents spam — each profile is rate-limited to one notification per 60 seconds.
 
@@ -59,22 +59,28 @@ Version 1.0 is a ground-up redesign of AWS CLI Gateway.
 
 ## Installation
 
-Download the latest release from the [Releases](https://github.com/dmcphearson/aws-cli-gateway/releases) page and move the `.app` to your Applications folder.
+Install with [Homebrew](https://brew.sh):
+
+```bash
+brew install --cask dmcphearson/tap/gateway
+```
+
+Update with `brew upgrade --cask gateway`. Or download the latest release from the [Releases](https://github.com/dmcphearson/gateway/releases) page and move `Gateway.app` to your Applications folder.
 
 ### Build from Source
 
 Requires Xcode 16+ and macOS 15.2+.
 
 ```bash
-git clone https://github.com/dmcphearson/aws-cli-gateway.git
-cd aws-cli-gateway
+git clone https://github.com/dmcphearson/gateway.git
+cd gateway
 ./build.sh
 ```
 
-The built app appears in `output/AWS CLI Gateway.app`. To install:
+The built app appears in `output/Gateway.app`. To install:
 
 ```bash
-cp -R "output/AWS CLI Gateway.app" /Applications/
+cp -R output/Gateway.app /Applications/
 ```
 
 To sign with your own Developer ID:
@@ -114,7 +120,6 @@ Features I'm exploring for future releases:
 - **Keychain-backed token storage** — Store SSO refresh tokens in macOS Keychain (encrypted at rest, Touch ID protected) instead of plaintext JSON in `~/.aws/sso/cache`
 - **App-to-profile binding** — Bind shell commands (`terraform`, `cdk`, `npm`) to specific profiles with per-command `AWS_PROFILE` injection
 - **Profile grouping** — Organize profiles by AWS organization or team for users managing 15+ profiles
-- **Direct OAuth refresh** — Call the SSO OIDC endpoint directly instead of shelling out to `aws sts get-caller-identity` for faster silent refresh
 - **Menu bar icon state** — Reflect worst-case session status across all profiles in the status bar icon
 
 ## Contributing

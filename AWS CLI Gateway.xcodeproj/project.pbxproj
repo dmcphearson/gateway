@@ -9,16 +9,9 @@
 /* Begin PBXBuildFile section */
 		0E202B614C324AB0AF9B2144 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A2FC4B30944F839547EAF5 /* SettingsView.swift */; };
 		1A1EA61B2D9861FB00294D9A /* SSOTokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1EA61A2D9861F500294D9A /* SSOTokenManager.swift */; };
-		1A1EA61C2D9861FB00294D9A /* SSOTokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1EA61A2D9861F500294D9A /* SSOTokenManager.swift */; };
-		1A1EA61D2D9861FB00294D9A /* SSOTokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1EA61A2D9861F500294D9A /* SSOTokenManager.swift */; };
 		1A430D432D9787E60030579F /* AWS_CLI_GatewayUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A430D412D9787E60030579F /* AWS_CLI_GatewayUITestsLaunchTests.swift */; };
-		1A430D442D9787E60030579F /* AWS_CLI_GatewayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A430D3E2D9787E60030579F /* AWS_CLI_GatewayTests.swift */; };
 		1A430D452D9787E60030579F /* AWS_CLI_GatewayUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A430D402D9787E60030579F /* AWS_CLI_GatewayUITests.swift */; };
-		1A430D462D9787E60030579F /* AWS_CLI_GatewayUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A430D412D9787E60030579F /* AWS_CLI_GatewayUITestsLaunchTests.swift */; };
 		1A430D472D9787E60030579F /* AWS_CLI_GatewayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A430D3E2D9787E60030579F /* AWS_CLI_GatewayTests.swift */; };
-		1A430D482D9787E60030579F /* AWS_CLI_GatewayUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A430D402D9787E60030579F /* AWS_CLI_GatewayUITests.swift */; };
-		1A7BC9EE2D9C991B003A4C1D /* ScriptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7BC9ED2D9C9918003A4C1D /* ScriptManager.swift */; };
-		1A7BC9EF2D9C991B003A4C1D /* ScriptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7BC9ED2D9C9918003A4C1D /* ScriptManager.swift */; };
 		1A7BC9F02D9C991B003A4C1D /* ScriptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7BC9ED2D9C9918003A4C1D /* ScriptManager.swift */; };
 		1A96BB622D78823700C64C80 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A96BB4E2D78823700C64C80 /* Preview Assets.xcassets */; };
 		1A96BB632D78823700C64C80 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A96BB522D78823700C64C80 /* Assets.xcassets */; };
@@ -32,38 +25,14 @@
 		1A96BB702D78823700C64C80 /* CommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB552D78823700C64C80 /* CommandRunner.swift */; };
 		1A96BB712D78823700C64C80 /* MenuBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB5A2D78823700C64C80 /* MenuBarManager.swift */; };
 		1A96BB722D78823700C64C80 /* AddProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB502D78823700C64C80 /* AddProfileView.swift */; };
-		1A96BB772D78823700C64C80 /* ConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB562D78823700C64C80 /* ConfigManager.swift */; };
-		1A96BB792D78823700C64C80 /* SSOProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB5E2D78823700C64C80 /* SSOProfile.swift */; };
-		1A96BB7A2D78823700C64C80 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB512D78823700C64C80 /* AppDelegate.swift */; };
-		1A96BB7B2D78823700C64C80 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB602D78823700C64C80 /* WindowManager.swift */; };
-		1A96BB7C2D78823700C64C80 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB572D78823700C64C80 /* Constants.swift */; };
-		1A96BB7D2D78823700C64C80 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB5D2D78823700C64C80 /* SessionManager.swift */; };
-		1A96BB7E2D78823700C64C80 /* AWS_CLI_GatewayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB542D78823700C64C80 /* AWS_CLI_GatewayApp.swift */; };
-		1A96BB7F2D78823700C64C80 /* CommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB552D78823700C64C80 /* CommandRunner.swift */; };
-		1A96BB802D78823700C64C80 /* MenuBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB5A2D78823700C64C80 /* MenuBarManager.swift */; };
-		1A96BB812D78823700C64C80 /* AddProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB502D78823700C64C80 /* AddProfileView.swift */; };
 		1A96BB822D78823700C64C80 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A96BB4E2D78823700C64C80 /* Preview Assets.xcassets */; };
 		1A96BB832D78823700C64C80 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A96BB522D78823700C64C80 /* Assets.xcassets */; };
 		1A96BB842D78823700C64C80 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A96BB4E2D78823700C64C80 /* Preview Assets.xcassets */; };
 		1A96BB852D78823700C64C80 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A96BB522D78823700C64C80 /* Assets.xcassets */; };
-		1A96BB8A2D78823700C64C80 /* ConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB562D78823700C64C80 /* ConfigManager.swift */; };
-		1A96BB8C2D78823700C64C80 /* SSOProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB5E2D78823700C64C80 /* SSOProfile.swift */; };
-		1A96BB8D2D78823700C64C80 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB512D78823700C64C80 /* AppDelegate.swift */; };
-		1A96BB8E2D78823700C64C80 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB602D78823700C64C80 /* WindowManager.swift */; };
-		1A96BB8F2D78823700C64C80 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB572D78823700C64C80 /* Constants.swift */; };
-		1A96BB902D78823700C64C80 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB5D2D78823700C64C80 /* SessionManager.swift */; };
-		1A96BB912D78823700C64C80 /* AWS_CLI_GatewayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB542D78823700C64C80 /* AWS_CLI_GatewayApp.swift */; };
-		1A96BB922D78823700C64C80 /* CommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB552D78823700C64C80 /* CommandRunner.swift */; };
-		1A96BB932D78823700C64C80 /* MenuBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB5A2D78823700C64C80 /* MenuBarManager.swift */; };
-		1A96BB942D78823700C64C80 /* AddProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB502D78823700C64C80 /* AddProfileView.swift */; };
-		1A96BB962D7B429D00C64C80 /* ProfileHistoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB952D7B429800C64C80 /* ProfileHistoryManager.swift */; };
-		1A96BB972D7B429D00C64C80 /* ProfileHistoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB952D7B429800C64C80 /* ProfileHistoryManager.swift */; };
 		1A96BB982D7B429D00C64C80 /* ProfileHistoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96BB952D7B429800C64C80 /* ProfileHistoryManager.swift */; };
 		839AE00697114A448ECD6D3A /* ProfileSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F92D750D5F4EA58B1DAE73 /* ProfileSession.swift */; };
 		C166BF61FF324729BC1ED47D /* AppProfileBindingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E03473DE2B9418B8915E45F /* AppProfileBindingManager.swift */; };
-		F27D5A482D96E07A00261F26 /* ManagerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27D5A472D96E07500261F26 /* ManagerModels.swift */; };
 		F27D5A492D96E07A00261F26 /* ManagerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27D5A472D96E07500261F26 /* ManagerModels.swift */; };
-		F27D5A4A2D96E07A00261F26 /* ManagerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27D5A472D96E07500261F26 /* ManagerModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -376,23 +345,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A7BC9EE2D9C991B003A4C1D /* ScriptManager.swift in Sources */,
-				1A96BB962D7B429D00C64C80 /* ProfileHistoryManager.swift in Sources */,
-				F27D5A4A2D96E07A00261F26 /* ManagerModels.swift in Sources */,
-				1A96BB772D78823700C64C80 /* ConfigManager.swift in Sources */,
-				1A96BB792D78823700C64C80 /* SSOProfile.swift in Sources */,
-				1A96BB7A2D78823700C64C80 /* AppDelegate.swift in Sources */,
-				1A96BB7B2D78823700C64C80 /* WindowManager.swift in Sources */,
-				1A96BB7C2D78823700C64C80 /* Constants.swift in Sources */,
-				1A96BB7D2D78823700C64C80 /* SessionManager.swift in Sources */,
-				1A1EA61C2D9861FB00294D9A /* SSOTokenManager.swift in Sources */,
-				1A96BB7E2D78823700C64C80 /* AWS_CLI_GatewayApp.swift in Sources */,
-				1A96BB7F2D78823700C64C80 /* CommandRunner.swift in Sources */,
-				1A96BB802D78823700C64C80 /* MenuBarManager.swift in Sources */,
-				1A96BB812D78823700C64C80 /* AddProfileView.swift in Sources */,
-				1A430D462D9787E60030579F /* AWS_CLI_GatewayUITestsLaunchTests.swift in Sources */,
 				1A430D472D9787E60030579F /* AWS_CLI_GatewayTests.swift in Sources */,
-				1A430D482D9787E60030579F /* AWS_CLI_GatewayUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,22 +353,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A7BC9EF2D9C991B003A4C1D /* ScriptManager.swift in Sources */,
-				1A96BB972D7B429D00C64C80 /* ProfileHistoryManager.swift in Sources */,
-				F27D5A482D96E07A00261F26 /* ManagerModels.swift in Sources */,
-				1A96BB8A2D78823700C64C80 /* ConfigManager.swift in Sources */,
-				1A96BB8C2D78823700C64C80 /* SSOProfile.swift in Sources */,
-				1A96BB8D2D78823700C64C80 /* AppDelegate.swift in Sources */,
-				1A96BB8E2D78823700C64C80 /* WindowManager.swift in Sources */,
-				1A96BB8F2D78823700C64C80 /* Constants.swift in Sources */,
-				1A96BB902D78823700C64C80 /* SessionManager.swift in Sources */,
-				1A1EA61D2D9861FB00294D9A /* SSOTokenManager.swift in Sources */,
-				1A96BB912D78823700C64C80 /* AWS_CLI_GatewayApp.swift in Sources */,
-				1A96BB922D78823700C64C80 /* CommandRunner.swift in Sources */,
-				1A96BB932D78823700C64C80 /* MenuBarManager.swift in Sources */,
-				1A96BB942D78823700C64C80 /* AddProfileView.swift in Sources */,
 				1A430D432D9787E60030579F /* AWS_CLI_GatewayUITestsLaunchTests.swift in Sources */,
-				1A430D442D9787E60030579F /* AWS_CLI_GatewayTests.swift in Sources */,
 				1A430D452D9787E60030579F /* AWS_CLI_GatewayUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -567,7 +505,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"AWS CLI Gateway/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -575,7 +513,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "AWS-CLI-Gateway-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "AWS CLI Gateway";
+				INFOPLIST_KEY_CFBundleDisplayName = Gateway;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -584,9 +522,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gateway";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Gateway;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -604,7 +542,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"AWS CLI Gateway/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -612,7 +550,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "AWS-CLI-Gateway-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "AWS CLI Gateway";
+				INFOPLIST_KEY_CFBundleDisplayName = Gateway;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -621,9 +559,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gateway";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = Gateway;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -635,16 +573,16 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gatewayTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AWS CLI Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AWS CLI Gateway";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Gateway";
 			};
 			name = Debug;
 		};
@@ -653,16 +591,16 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gatewayTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AWS CLI Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AWS CLI Gateway";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Gateway.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Gateway";
 			};
 			name = Release;
 		};
@@ -670,10 +608,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gatewayUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -686,10 +624,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gatewayUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

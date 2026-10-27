@@ -344,61 +344,76 @@ class SessionManager {
     }
 
     /// Attempts to refresh the SSO session for a profile.
-    /// First tries a silent refresh via sts get-caller-identity (uses refresh token).
-    /// Only falls back to aws sso login (browser) if the refresh token is dead.
+    /// First refreshes the SSO token (which SDK tools such as Terraform read),
+    /// then checks role credentials via sts get-caller-identity. Only falls
+    /// back to aws sso login (browser) if the refresh token is dead.
     func refreshSSOSession(for profileName: String) async -> Bool {
         print("SessionManager: Attempting to refresh session for profile \(profileName)")
 
-        // Step 1: Try silent refresh — sts get-caller-identity forces CLI to use refresh token
-        do {
-            _ = try await CommandRunner.shared.runCommand("aws", args: ["sts", "get-caller-identity", "--profile", profileName])
+        // Step 1: Refresh the SSO token. sts get-caller-identity alone can
+        // succeed from cached role credentials without ever touching it.
+        let sessionName = ssoSessionName(for: profileName)
+        var needsBrowser = false
+        if let sessionName = sessionName {
+            let outcome = await refreshSSOToken(sessionName: sessionName)
+            applySSOTokenOutcome(outcome, profiles: [profileName])
+            if case .needsLogin = outcome { needsBrowser = true }
+        }
 
-            // Re-read the refreshed cache files
-            profileCacheFileMap.removeValue(forKey: profileName)
-            try await Task.sleep(nanoseconds: 500_000_000)
+        // Step 2: Check role credentials (the CLI mints them from the SSO token)
+        if !needsBrowser {
+            do {
+                _ = try await CommandRunner.shared.runCommand("aws", args: ["sts", "get-caller-identity", "--profile", profileName])
 
-            if let cacheFilename = await findMatchingCacheFile(forProfile: profileName),
-               let token = try? await readCredentialsFromCacheFile(cacheFilename),
-               token.expiresAt > Date() {
+                // Re-read the refreshed cache files
+                profileCacheFileMap.removeValue(forKey: profileName)
+                try await Task.sleep(nanoseconds: 500_000_000)
 
-                profileCacheFileMap[profileName] = cacheFilename
-                let ssoExpiry = SSOTokenManager.shared.getSSOTokenExpiry(forProfile: profileName)
+                if let cacheFilename = await findMatchingCacheFile(forProfile: profileName),
+                   let token = try? await readCredentialsFromCacheFile(cacheFilename),
+                   token.expiresAt > Date() {
 
-                await MainActor.run {
-                    self.activeSessions[profileName] = ProfileSession(
-                        profileName: profileName,
-                        roleCredExpiryDate: token.expiresAt,
-                        ssoTokenExpiryDate: ssoExpiry,
-                        lastHealthCheck: Date(),
-                        status: .active,
-                        cacheFileName: cacheFilename
-                    )
-                    self.startSessionTimer()
-                    self.onSessionsUpdated?(self.activeSessions)
+                    profileCacheFileMap[profileName] = cacheFilename
+                    let ssoExpiry = SSOTokenManager.shared.getSSOTokenExpiry(forProfile: profileName)
+
+                    await MainActor.run {
+                        self.activeSessions[profileName] = ProfileSession(
+                            profileName: profileName,
+                            roleCredExpiryDate: token.expiresAt,
+                            ssoTokenExpiryDate: ssoExpiry,
+                            lastHealthCheck: Date(),
+                            status: .active,
+                            cacheFileName: cacheFilename
+                        )
+                        self.startSessionTimer()
+                        self.onSessionsUpdated?(self.activeSessions)
+                    }
+                    return true
                 }
+
                 return true
+
+            } catch {
+                let errorString = "\(error)"
+                print("SessionManager: Silent refresh failed for \(profileName): \(errorString)")
+
+                let sessionExpired = errorString.contains("ExpiredToken") ||
+                    errorString.contains("InvalidIdentityToken") ||
+                    errorString.contains("The SSO session") ||
+                    errorString.contains("Token has expired") ||
+                    errorString.contains("UnauthorizedAccess") ||
+                    errorString.contains("SSOTokenLoadError")
+
+                if !sessionExpired { return false }
             }
-
-            return true
-
-        } catch {
-            let errorString = "\(error)"
-            print("SessionManager: Silent refresh failed for \(profileName): \(errorString)")
-
-            let needsBrowser = errorString.contains("ExpiredToken") ||
-                errorString.contains("InvalidIdentityToken") ||
-                errorString.contains("The SSO session") ||
-                errorString.contains("Token has expired") ||
-                errorString.contains("UnauthorizedAccess") ||
-                errorString.contains("SSOTokenLoadError")
-
-            if !needsBrowser { return false }
         }
 
         // Refresh token is dead — fall back to browser login
         do {
-            _ = try await CommandRunner.shared.runCommand("aws", args: ["sso", "login", "--profile", profileName])
+            _ = try await CommandRunner.shared.runCommand("aws", args: Self.ssoLoginArguments(profileName: profileName, sessionName: sessionName))
             try await Task.sleep(nanoseconds: 1_000_000_000)
+            // Mint role credentials in case they lapsed with the session.
+            _ = try? await CommandRunner.shared.runCommand("aws", args: ["sts", "get-caller-identity", "--profile", profileName])
 
             profileCacheFileMap.removeValue(forKey: profileName)
             if let cacheFilename = await findMatchingCacheFile(forProfile: profileName),
@@ -985,6 +1000,89 @@ class SessionManager {
     private var expiryRefreshTime: Date? = nil
     private let healthCheckInterval: TimeInterval = 300 // 5 minutes
 
+    private nonisolated let tokenRefresher = SSOTokenRefresher()
+    private var refreshingSSOSessions: Set<String> = []
+
+    /// The sso-session a profile signs in through: its own for SSO profiles,
+    /// the source's for IAM role profiles chained from one.
+    nonisolated func ssoSessionName(for profileName: String) -> String? {
+        if let name = ConfigManager.shared.getSSOSessionName(for: profileName) {
+            return name
+        }
+        if let iamProfile = ConfigManager.shared.getProfile(profileName) as? IAMProfile,
+           !iamProfile.ssoSession.isEmpty {
+            return iamProfile.ssoSession
+        }
+        return nil
+    }
+
+    /// `aws sso login` arguments that refresh the token SDK tools read:
+    /// the sso-session when the profile has one, else the profile (legacy).
+    nonisolated static func ssoLoginArguments(profileName: String, sessionName: String?) -> [String] {
+        if let sessionName = sessionName {
+            return ["sso", "login", "--sso-session", sessionName]
+        }
+        return ["sso", "login", "--profile", profileName]
+    }
+
+    /// Refreshes the SSO access token of every sso-session behind the active
+    /// profiles (once per session, however many profiles share it).
+    private func keepSSOTokensFresh() {
+        let profileNames = Array(activeSessions.keys)
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            let profilesBySession = Dictionary(grouping: profileNames) { self.ssoSessionName(for: $0) }
+            for case let (sessionName?, profiles) in profilesBySession {
+                let claimed = await MainActor.run { self.refreshingSSOSessions.insert(sessionName).inserted }
+                guard claimed else { continue }
+                let outcome = await self.refreshSSOToken(sessionName: sessionName)
+                await MainActor.run {
+                    self.refreshingSSOSessions.remove(sessionName)
+                    self.applySSOTokenOutcome(outcome, profiles: profiles)
+                }
+            }
+        }
+    }
+
+    private nonisolated func refreshSSOToken(sessionName: String) async -> SSOTokenRefresher.Outcome {
+        let outcome = await tokenRefresher.refreshIfNeeded(sessionName: sessionName)
+        switch outcome {
+        case .refreshed(let expiresAt):
+            print("[Gateway] SSO token for session \(sessionName) refreshed, expires \(expiresAt)")
+        case .needsLogin(let reason), .failed(let reason):
+            print("[Gateway] Error: \(reason)")
+        case .fresh, .alreadyRefreshed:
+            break
+        }
+        return outcome
+    }
+
+    private func applySSOTokenOutcome(_ outcome: SSOTokenRefresher.Outcome, profiles: [String]) {
+        for profileName in profiles where activeSessions[profileName] != nil {
+            switch outcome {
+            case .refreshed(let expiresAt):
+                activeSessions[profileName]?.ssoTokenExpiryDate = expiresAt
+                fallthrough
+            case .alreadyRefreshed:
+                // A refresh that just worked proves the session can renew;
+                // clear a yellow state left by an earlier failure or probe.
+                if activeSessions[profileName]?.status == .reauthRequired {
+                    activeSessions[profileName]?.status = .active
+                    activeSessions[profileName]?.ssoSessionAlive = true
+                }
+            case .needsLogin:
+                // Role creds may still work for the CLI, but SDK tools that use
+                // the SSO token (Terraform) are already failing: show yellow.
+                if activeSessions[profileName]?.status == .active {
+                    activeSessions[profileName]?.status = .reauthRequired
+                }
+            case .fresh, .failed:
+                break
+            }
+        }
+        onSessionsUpdated?(activeSessions)
+    }
+
     private func checkSessionStatus() {
         guard !activeSessions.isEmpty else { return }
 
@@ -993,6 +1091,7 @@ class SessionManager {
         // Every 60 seconds: re-read cache files for all active sessions
         if expiryRefreshTime == nil || now.timeIntervalSince(expiryRefreshTime!) > 60 {
             expiryRefreshTime = now
+            keepSSOTokensFresh()
 
             for (profileName, session) in activeSessions {
                 let cacheNameHint = session.cacheFileName ?? profileCacheFileMap[profileName]

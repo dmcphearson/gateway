@@ -39,6 +39,19 @@ struct ProfileSession {
         return max(0, expiry.timeIntervalSinceNow)
     }
 
+    /// State of the SSO access token that SDK tools (Terraform) use, which
+    /// can lapse while the role-credential countdown still runs.
+    func ssoTokenSummary(now: Date = Date()) -> String? {
+        guard let expiry = ssoTokenExpiryDate else { return nil }
+        if status == .reauthRequired { return "Can't refresh, sign in again" }
+
+        let remaining = Int(expiry.timeIntervalSince(now))
+        guard remaining > 0 else { return "Expired" }
+        let hours = remaining / 3600
+        let minutes = (remaining % 3600) / 60
+        return hours > 0 ? "Valid, \(hours)h \(minutes)m left" : "Valid, \(minutes)m left"
+    }
+
     var formattedTimeRemaining: String {
         let remaining = timeRemaining
         let hours = Int(remaining) / 3600
