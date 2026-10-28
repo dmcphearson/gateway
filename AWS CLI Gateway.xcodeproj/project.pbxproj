@@ -72,7 +72,7 @@
 		1A96BB5E2D78823700C64C80 /* SSOProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSOProfile.swift; sourceTree = "<group>"; };
 		1A96BB602D78823700C64C80 /* WindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowManager.swift; sourceTree = "<group>"; };
 		1A96BB952D7B429800C64C80 /* ProfileHistoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHistoryManager.swift; sourceTree = "<group>"; };
-		1A97FA732D765E300059C29D /* AWS CLI Gateway.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AWS CLI Gateway.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A97FA732D765E300059C29D /* Gateway.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gateway.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A97FA842D765E310059C29D /* AWS CLI GatewayTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AWS CLI GatewayTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A97FA8E2D765E310059C29D /* AWS CLI GatewayUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "AWS CLI GatewayUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1ACB671D2E7889B1002EA9F1 /* AWS CLI GatewayRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "AWS CLI GatewayRelease.entitlements"; sourceTree = "<group>"; };
@@ -80,6 +80,7 @@
 		7E03473DE2B9418B8915E45F /* AppProfileBindingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProfileBindingManager.swift; sourceTree = "<group>"; };
 		E7A2FC4B30944F839547EAF5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		F27D5A472D96E07500261F26 /* ManagerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagerModels.swift; sourceTree = "<group>"; };
+		5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Signing.xcconfig; path = Config/Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,6 +167,7 @@
 				1A430D3F2D9787E60030579F /* AWS CLI GatewayTests */,
 				1A430D422D9787E60030579F /* AWS CLI GatewayUITests */,
 				1A96BB612D78823700C64C80 /* AWS CLI Gateway */,
+				5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */,
 				1A97FA742D765E300059C29D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -173,7 +175,7 @@
 		1A97FA742D765E300059C29D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1A97FA732D765E300059C29D /* AWS CLI Gateway.app */,
+				1A97FA732D765E300059C29D /* Gateway.app */,
 				1A97FA842D765E310059C29D /* AWS CLI GatewayTests.xctest */,
 				1A97FA8E2D765E310059C29D /* AWS CLI GatewayUITests.xctest */,
 			);
@@ -199,7 +201,7 @@
 			packageProductDependencies = (
 			);
 			productName = "AWS SSO Gateway";
-			productReference = 1A97FA732D765E300059C29D /* AWS CLI Gateway.app */;
+			productReference = 1A97FA732D765E300059C29D /* Gateway.app */;
 			productType = "com.apple.product-type.application";
 		};
 		1A97FA832D765E310059C29D /* AWS CLI GatewayTests */ = {
@@ -496,19 +498,17 @@
 		};
 		1A97FA992D765E310059C29D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "AWS CLI Gateway/AWS_CLI_Gateway.entitlements";
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"AWS CLI Gateway/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -525,7 +525,6 @@
 				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gateway";
 				PRODUCT_NAME = Gateway;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -533,19 +532,17 @@
 		};
 		1A97FA9A2D765E310059C29D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "AWS CLI Gateway/AWS CLI GatewayRelease.entitlements";
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"AWS CLI Gateway/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -562,7 +559,6 @@
 				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.mcphearson.aws-cli-gateway";
 				PRODUCT_NAME = Gateway;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -570,6 +566,7 @@
 		};
 		1A97FA9C2D765E310059C29D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -588,6 +585,7 @@
 		};
 		1A97FA9D2D765E310059C29D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -606,6 +604,7 @@
 		};
 		1A97FA9F2D765E310059C29D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
@@ -622,6 +621,7 @@
 		};
 		1A97FAA02D765E310059C29D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C1A0E7B2F0A4D3E00C0FFEE /* Signing.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
