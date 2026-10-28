@@ -92,6 +92,15 @@ To sign with your own Developer ID:
 CODESIGN_IDENTITY="Developer ID Application: Your Name" ./build.sh
 ```
 
+Building in Xcode signs the app to run locally by default, so no Apple account is needed. To sign with your own team (for Archive, for example), create `Config/Signing.local.xcconfig`; it is gitignored:
+
+```
+CODE_SIGN_IDENTITY = Apple Development
+DEVELOPMENT_TEAM = <your Team ID>
+```
+
+Set signing there, not in the Signing & Capabilities tab, which writes your team into the project file. CI fails if signing settings appear in `project.pbxproj`.
+
 ## Terminal Integration
 
 Install the `gateway` command from the menu bar: **Tools & Settings > Install CLI Tools**.

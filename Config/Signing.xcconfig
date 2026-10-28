@@ -1,0 +1,17 @@
+// Code signing for every target.
+//
+// Without Signing.local.xcconfig the app is signed to run locally (ad hoc),
+// so a fresh clone builds with no Apple account. To sign with your own team,
+// create Config/Signing.local.xcconfig (gitignored):
+//
+//   CODE_SIGN_IDENTITY = Apple Development
+//   DEVELOPMENT_TEAM = <your Team ID>
+//
+// Keep signing settings out of project.pbxproj: target settings override this
+// file, and scripts/check-signing.sh fails CI if any appear there.
+
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY = -
+DEVELOPMENT_TEAM =
+
+#include? "Signing.local.xcconfig"

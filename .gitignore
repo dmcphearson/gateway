@@ -70,3 +70,6 @@ CLAUDE.md
 
 # Documentation folder
 docs/
+
+# Local code signing (your Team ID)
+Config/Signing.local.xcconfig
