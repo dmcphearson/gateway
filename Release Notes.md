@@ -1,5 +1,11 @@
 # Release Notes
 
+## Version 1.0.4
+
+- The menu bar icon is back to its full size; 1.0.3 drew it smaller.
+
+---
+
 ## Version 1.0.3
 
 - Renamed to **Gateway**. Settings, connected profiles and the `gateway` command carry over unchanged.

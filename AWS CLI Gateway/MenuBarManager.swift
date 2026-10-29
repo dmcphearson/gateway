@@ -496,9 +496,7 @@ class MenuBarManager: NSObject {
             statusItem?.isVisible = true
 
             if let button = statusItem?.button {
-                if let image = NSImage(named: "cloud-lock") {
-                    image.size = NSSize(width: 18, height: 18)
-                    image.isTemplate = true
+                if let image = Self.statusIcon() {
                     button.image = image
                 } else {
                     // Never leave the button empty — a variableLength item with no
@@ -685,11 +683,18 @@ class MenuBarManager: NSObject {
 
     // MARK: - Status Icon
 
+    /// The menu bar icon, as a template so macOS tints it for light and dark menu bars.
+    static func statusIcon() -> NSImage? {
+        guard let image = NSImage(named: "cloud-lock") else { return nil }
+        image.isTemplate = true
+        return image
+    }
+
     private var statusDotView: NSView?
 
     private func updateStatusIcon() {
         guard let button = statusItem?.button else { return }
-        guard let baseImage = NSImage(named: "cloud-lock") else { return }
+        guard let baseImage = Self.statusIcon() else { return }
 
         let sessions = SessionManager.shared.activeSessions
         let hasExpired = sessions.values.contains { $0.status == .expired }
@@ -697,7 +702,6 @@ class MenuBarManager: NSObject {
         let hasActive = sessions.values.contains { $0.status == .active }
 
         button.image = baseImage
-        button.image?.isTemplate = true
 
         statusDotView?.removeFromSuperview()
         statusDotView = nil
