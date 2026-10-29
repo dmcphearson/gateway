@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import Testing
 @testable import Gateway
 
@@ -228,5 +228,14 @@ struct SSOTokenSummaryTests {
 
     @Test func hiddenWithoutAnSSOToken() {
         #expect(session(ssoExpiresIn: nil).ssoTokenSummary(now: now) == nil)
+    }
+}
+
+@MainActor
+struct StatusIconTests {
+    @Test func drawsAtTheAssetsFullSize() throws {
+        let icon = try #require(MenuBarManager.statusIcon())
+        #expect(icon.size == NSSize(width: 24, height: 24))
+        #expect(icon.isTemplate)
     }
 }
