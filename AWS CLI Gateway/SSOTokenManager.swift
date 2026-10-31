@@ -462,6 +462,17 @@ struct SSOTokenRefresher: Sendable {
         cacheDirectory.appendingPathComponent("\(SSOTokenManager.sha1Hash(sessionName)).json")
     }
 
+    /// Whether the session can mint role credentials without a browser: the
+    /// access token is unexpired and a refresh token is present.
+    func isSessionLive(sessionName: String, now: Date = Date()) -> Bool {
+        guard let token = readToken(tokenFile(forSession: sessionName)),
+              let expiresAt = date(token["expiresAt"]), expiresAt > now,
+              let refreshToken = token["refreshToken"] as? String, !refreshToken.isEmpty else {
+            return false
+        }
+        return true
+    }
+
     func refreshIfNeeded(sessionName: String, now: Date = Date()) async -> Outcome {
         let file = tokenFile(forSession: sessionName)
         guard let token = readToken(file) else {
