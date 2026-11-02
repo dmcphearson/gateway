@@ -1,5 +1,13 @@
 # Release Notes
 
+## Version 1.0.5
+
+- Sessions signed in outside Gateway, such as with `aws sso login` in a terminal, now show up. A profile whose credentials the AWS CLI already has connects on its own, up to the five-profile limit; others on a live session show "Signed in", and connecting them opens no browser.
+- Disconnecting a profile no longer signs you out of every session. It stops Gateway tracking that profile only, and Gateway won't reconnect it on its own.
+- "Disconnect All" is now "Sign Out of All Sessions", which signs out of every AWS SSO session on the Mac.
+
+---
+
 ## Version 1.0.4
 
 - The menu bar icon is back to its full size; 1.0.3 drew it smaller.
