@@ -132,7 +132,6 @@ Features I'm exploring for future releases:
 - **Keychain-backed token storage** — Store SSO refresh tokens in macOS Keychain (encrypted at rest, Touch ID protected) instead of plaintext JSON in `~/.aws/sso/cache`
 - **App-to-profile binding** — Bind shell commands (`terraform`, `cdk`, `npm`) to specific profiles with per-command `AWS_PROFILE` injection
 - **Profile grouping** — Organize profiles by AWS organization or team for users managing 15+ profiles
-- **Menu bar icon state** — Reflect worst-case session status across all profiles in the status bar icon
 
 ## Contributing
 
