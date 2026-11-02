@@ -23,6 +23,13 @@ class ProfileHistoryManager {
         var linkedToId: String?  // ID of a profile this one depends on
         var profileType: ProfileType  // Type of profile (SSO or IAM)
         var isConnected: Bool = false
+        var dismissed: Bool?  // Optional so history files written before it still decode
+
+        /// Disconnected by the person; adoption leaves it signed in, not connected.
+        var isDismissed: Bool {
+            get { dismissed ?? false }
+            set { dismissed = newValue }
+        }
 
         init(
             originalName: String,
@@ -88,8 +95,10 @@ class ProfileHistoryManager {
 
         if let index = profiles.firstIndex(where: { $0.originalName == profileName }) {
             profiles[index].isConnected = true
+            profiles[index].isDismissed = false
         } else if let index = profiles.firstIndex(where: { $0.id == profileName }) {
             profiles[index].isConnected = true
+            profiles[index].isDismissed = false
         } else {
             return
         }
@@ -118,6 +127,19 @@ class ProfileHistoryManager {
             profiles[index].isConnected = false
             saveProfiles(immediate: true)
         }
+    }
+
+    /// Disconnects a profile at the person's request, so adoption won't reconnect it
+    func dismissProfile(_ profileName: String) {
+        guard let index = profiles.firstIndex(where: { $0.originalName == profileName }) else { return }
+        profiles[index].isConnected = false
+        profiles[index].isDismissed = true
+        saveProfiles(immediate: true)
+    }
+
+    /// Profiles the person disconnected
+    func getDismissedProfileNames() -> Set<String> {
+        return Set(profiles.filter { $0.isDismissed }.map(\.originalName))
     }
 
     /// Clears the connected status from all profiles

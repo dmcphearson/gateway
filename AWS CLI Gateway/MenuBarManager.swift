@@ -97,7 +97,7 @@ struct StatusBarContentView: View {
                 MenuActionButton(title: "Open AWS Console", icon: "globe") {
                     viewModel.openConsole()
                 }
-                MenuActionButton(title: "Disconnect All", icon: "xmark.circle") {
+                MenuActionButton(title: "Sign Out of All Sessions", icon: "rectangle.portrait.and.arrow.right") {
                     viewModel.disconnectAll()
                 }
                 Divider().padding(.horizontal, 10).padding(.vertical, 4)
@@ -424,14 +424,15 @@ class StatusBarViewModel: ObservableObject {
 
     func disconnectProfile(_ name: String) {
         Task {
+            // Stop tracking only. `aws sso logout` ignores --profile and signs out every session.
             SessionManager.shared.cleanDisconnect(for: name)
-            ProfileHistoryManager.shared.setProfileDisconnected(name)
-            _ = try? await CommandRunner.shared.runCommand("aws", args: ["sso", "logout", "--profile", name])
+            ProfileHistoryManager.shared.dismissProfile(name)
             await MainActor.run {
                 if manager?.activeProfile == name {
                     manager?.activeProfile = ProfileHistoryManager.shared.getConnectedProfileOriginalName()
                 }
                 refresh()
+                manager?.adoptExistingSessions()
             }
         }
     }
@@ -659,19 +660,21 @@ class MenuBarManager: NSObject {
     /// Brings online SSO profiles signed in outside Gateway, such as with a
     /// terminal `aws sso login`, and marks the others on a live session as
     /// signed in. Runs at launch and on panel open, not on a timer.
-    private func adoptExistingSessions() {
+    func adoptExistingSessions() {
         // Unit tests run inside the app; never act on the real ~/.aws there.
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
 
         let ssoProfiles = ConfigManager.shared.getProfiles().filter { $0 is SSOProfile }.map(\.name)
         let connected = Set(ProfileHistoryManager.shared.getConnectedProfiles().map(\.originalName))
+        let dismissed = ProfileHistoryManager.shared.getDismissedProfileNames()
 
         Task.detached { [weak self] in
             var candidates: [SessionAdoption.Candidate] = []
             for name in ssoProfiles where !connected.contains(name) {
                 let live = SessionManager.shared.hasLiveSSOSession(for: name)
                 let roleCredentials = live ? await SessionManager.shared.hasRoleCredentials(for: name) : false
-                candidates.append(.init(name: name, sessionLive: live, hasRoleCredentials: roleCredentials))
+                candidates.append(.init(name: name, sessionLive: live, hasRoleCredentials: roleCredentials,
+                                        dismissed: dismissed.contains(name)))
             }
             let plan = SessionAdoption.plan(candidates, connected: connected,
                                             limit: ProfileHistoryManager.maxConcurrentProfiles)
@@ -868,6 +871,7 @@ class MenuBarManager: NSObject {
             ProfileHistoryManager.shared.clearConnectedProfile()
             await MainActor.run {
                 self.activeProfile = nil
+                self.viewModel.signedInProfiles = []
                 self.viewModel.refresh()
                 self.updateStatusIcon()
             }
