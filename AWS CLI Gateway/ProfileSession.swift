@@ -83,3 +83,34 @@ enum ProfileSessionStatus: Equatable {
         }
     }
 }
+
+/// Decides which profiles signed in outside Gateway (a terminal `aws sso login`)
+/// to bring online. Only profiles with cached role credentials are connected,
+/// since one SSO session covers every profile on it; the rest are only marked
+/// signed in so connecting them skips the browser.
+enum SessionAdoption {
+    struct Candidate: Equatable {
+        let name: String
+        let sessionLive: Bool
+        let hasRoleCredentials: Bool
+    }
+
+    struct Plan: Equatable {
+        var connect: [String] = []
+        var signedIn: Set<String> = []
+    }
+
+    static func plan(_ candidates: [Candidate], connected: Set<String>, limit: Int) -> Plan {
+        var plan = Plan()
+        var slots = max(0, limit - connected.count)
+        for candidate in candidates where candidate.sessionLive && !connected.contains(candidate.name) {
+            if candidate.hasRoleCredentials && slots > 0 {
+                plan.connect.append(candidate.name)
+                slots -= 1
+            } else {
+                plan.signedIn.insert(candidate.name)
+            }
+        }
+        return plan
+    }
+}

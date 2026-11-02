@@ -1016,6 +1016,23 @@ class SessionManager {
         return nil
     }
 
+    /// Whether the profile's sso-session can mint role credentials without a
+    /// browser, whoever signed it in (Gateway or a terminal `aws sso login`).
+    nonisolated func hasLiveSSOSession(for profileName: String) -> Bool {
+        guard let sessionName = ssoSessionName(for: profileName) else { return false }
+        return SSOTokenRefresher().isSessionLive(sessionName: sessionName)
+    }
+
+    /// Whether the AWS CLI holds unexpired role credentials for exactly this
+    /// profile. Exact cache key only: the content search in
+    /// findMatchingCacheFile is too loose to connect a profile on.
+    nonisolated func hasRoleCredentials(for profileName: String) async -> Bool {
+        guard let ssoProfile = ConfigManager.shared.getProfile(profileName) as? SSOProfile else { return false }
+        let hash = generateCacheFileHash(profile: ssoProfile)
+        guard !hash.isEmpty else { return false }
+        return (try? await readCredentialsFromCacheFile("\(hash).json")) != nil
+    }
+
     /// `aws sso login` arguments that refresh the token SDK tools read:
     /// the sso-session when the profile has one, else the profile (legacy).
     nonisolated static func ssoLoginArguments(profileName: String, sessionName: String?) -> [String] {

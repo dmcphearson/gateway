@@ -73,6 +73,25 @@ struct SSOTokenRefresherTests {
         #expect(file.lastPathComponent == "0ad374308c5a4e22f723adf10145eafad7c4031c.json")
     }
 
+    @Test func sessionIsLiveWithUnexpiredTokenAndRefreshToken() throws {
+        try writeToken(expiresIn: 30 * 60)
+        #expect(SSOTokenRefresher(cacheDirectory: dir).isSessionLive(sessionName: session, now: now))
+    }
+
+    @Test func sessionIsNotLiveOnceTokenExpired() throws {
+        try writeToken(expiresIn: -60)
+        #expect(!SSOTokenRefresher(cacheDirectory: dir).isSessionLive(sessionName: session, now: now))
+    }
+
+    @Test func sessionIsNotLiveWithoutRefreshToken() throws {
+        try writeToken(expiresIn: 30 * 60, refreshToken: "")
+        #expect(!SSOTokenRefresher(cacheDirectory: dir).isSessionLive(sessionName: session, now: now))
+    }
+
+    @Test func sessionIsNotLiveWithoutTokenFile() {
+        #expect(!SSOTokenRefresher(cacheDirectory: dir).isSessionLive(sessionName: session, now: now))
+    }
+
     @Test func leavesTokenAloneOutsideRefreshWindow() async throws {
         try writeToken(expiresIn: 45 * 60)
         let oidc = FakeOIDC()
@@ -237,5 +256,51 @@ struct StatusIconTests {
         let icon = try #require(MenuBarManager.statusIcon())
         #expect(icon.size == NSSize(width: 24, height: 24))
         #expect(icon.isTemplate)
+    }
+}
+
+struct SessionAdoptionTests {
+    typealias Candidate = SessionAdoption.Candidate
+
+    @Test func connectsLiveProfilesWithRoleCredentials() {
+        let plan = SessionAdoption.plan(
+            [Candidate(name: "dev", sessionLive: true, hasRoleCredentials: true)],
+            connected: [], limit: 5)
+        #expect(plan.connect == ["dev"])
+        #expect(plan.signedIn.isEmpty)
+    }
+
+    @Test func marksLiveProfilesWithoutRoleCredentialsSignedIn() {
+        let plan = SessionAdoption.plan(
+            [Candidate(name: "prod", sessionLive: true, hasRoleCredentials: false)],
+            connected: [], limit: 5)
+        #expect(plan.connect.isEmpty)
+        #expect(plan.signedIn == ["prod"])
+    }
+
+    @Test func ignoresProfilesWithoutALiveSession() {
+        let plan = SessionAdoption.plan(
+            [Candidate(name: "old", sessionLive: false, hasRoleCredentials: true)],
+            connected: [], limit: 5)
+        #expect(plan == SessionAdoption.Plan())
+    }
+
+    @Test func leavesConnectedProfilesAloneAndCountsThemAgainstTheLimit() {
+        let plan = SessionAdoption.plan(
+            [Candidate(name: "a", sessionLive: true, hasRoleCredentials: true),
+             Candidate(name: "b", sessionLive: true, hasRoleCredentials: true),
+             Candidate(name: "c", sessionLive: true, hasRoleCredentials: true)],
+            connected: ["a"], limit: 2)
+        #expect(plan.connect == ["b"])
+        #expect(plan.signedIn == ["c"])
+    }
+
+    @Test func overflowPastTheLimitIsSignedIn() {
+        let plan = SessionAdoption.plan(
+            [Candidate(name: "a", sessionLive: true, hasRoleCredentials: true),
+             Candidate(name: "b", sessionLive: true, hasRoleCredentials: true)],
+            connected: [], limit: 1)
+        #expect(plan.connect == ["a"])
+        #expect(plan.signedIn == ["b"])
     }
 }

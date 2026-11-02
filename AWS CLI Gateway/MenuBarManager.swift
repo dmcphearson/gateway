@@ -256,6 +256,13 @@ struct DisconnectedProfileRow: View {
 
             Spacer()
 
+            if profile.signedIn {
+                Text("Signed in")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+                    .help("Signed in to AWS SSO; connecting won't open a browser")
+            }
+
             Button(action: onConnect) {
                 Image(systemName: "play.fill")
                     .font(.system(size: 11))
@@ -319,12 +326,15 @@ struct ProfileDisplayInfo {
     var region: String?
     var expiresAtLocal: String?
     var ssoTokenState: String?
+    /// Not connected, but on a live SSO session, so connecting skips the browser.
+    var signedIn: Bool = false
 }
 
 @MainActor
 class StatusBarViewModel: ObservableObject {
     @Published var connectedProfiles: [ProfileDisplayInfo] = []
     @Published var disconnectedProfiles: [ProfileDisplayInfo] = []
+    var signedInProfiles: Set<String> = []
 
     weak var manager: MenuBarManager?
 
@@ -371,7 +381,8 @@ class StatusBarViewModel: ObservableObject {
         disconnectedProfiles = allProfiles
             .filter { !connectedNames.contains($0.name) }
             .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
-            .map { ProfileDisplayInfo(name: $0.name, timeRemaining: "", status: .expired) }
+            .map { ProfileDisplayInfo(name: $0.name, timeRemaining: "", status: .expired,
+                                      signedIn: signedInProfiles.contains($0.name)) }
     }
 
     func refreshProfile(_ name: String) {
@@ -515,6 +526,7 @@ class MenuBarManager: NSObject {
 
             setupNotifications()
             restoreActiveSessions()
+            adoptExistingSessions()
             viewModel.refresh()
             updateStatusIcon()
 
@@ -570,6 +582,8 @@ class MenuBarManager: NSObject {
     }
 
     private func showPanel() {
+        adoptExistingSessions()
+
         // Clean up any stale panel
         panel?.close()
         panel = nil
@@ -616,11 +630,10 @@ class MenuBarManager: NSObject {
         isRestoringSessions = true
         defer { isRestoringSessions = false }
 
-        // Only restore profiles the user actually connected via the app (persisted
-        // in profile_history.json), not every profile that happens to have a token
-        // on disk — a terminal `aws sso login` should NOT auto-appear as connected.
-        // Reconcile against disk: a previously-connected profile whose token is now
-        // gone gets marked disconnected.
+        // Restore profiles connected via the app (persisted in profile_history.json);
+        // adoptExistingSessions handles ones signed in elsewhere. Reconcile against
+        // disk: a previously-connected profile whose token is now gone gets marked
+        // disconnected.
         let previouslyConnected = ProfileHistoryManager.shared.getConnectedProfiles()
         var restoredCount = 0
 
@@ -641,6 +654,46 @@ class MenuBarManager: NSObject {
                 ProfileHistoryManager.shared.setProfileDisconnected(profileName)
             }
         }
+    }
+
+    /// Brings online SSO profiles signed in outside Gateway, such as with a
+    /// terminal `aws sso login`, and marks the others on a live session as
+    /// signed in. Runs at launch and on panel open, not on a timer.
+    private func adoptExistingSessions() {
+        // Unit tests run inside the app; never act on the real ~/.aws there.
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+
+        let ssoProfiles = ConfigManager.shared.getProfiles().filter { $0 is SSOProfile }.map(\.name)
+        let connected = Set(ProfileHistoryManager.shared.getConnectedProfiles().map(\.originalName))
+
+        Task.detached { [weak self] in
+            var candidates: [SessionAdoption.Candidate] = []
+            for name in ssoProfiles where !connected.contains(name) {
+                let live = SessionManager.shared.hasLiveSSOSession(for: name)
+                let roleCredentials = live ? await SessionManager.shared.hasRoleCredentials(for: name) : false
+                candidates.append(.init(name: name, sessionLive: live, hasRoleCredentials: roleCredentials))
+            }
+            let plan = SessionAdoption.plan(candidates, connected: connected,
+                                            limit: ProfileHistoryManager.maxConcurrentProfiles)
+            await self?.applyAdoption(plan)
+        }
+    }
+
+    private func applyAdoption(_ plan: SessionAdoption.Plan) {
+        for name in plan.connect {
+            print("[Gateway] Adopting session signed in outside the app: \(name)")
+            ProfileHistoryManager.shared.trackProfile(name)
+            ProfileHistoryManager.shared.setConnectedProfile(name)
+            SessionManager.shared.startMonitoring(for: name)
+            if activeProfile == nil {
+                isRestoringSessions = true
+                activeProfile = name
+                isRestoringSessions = false
+            }
+        }
+        viewModel.signedInProfiles = plan.signedIn
+        viewModel.refresh()
+        updateStatusIcon()
     }
 
     /// Whether a profile has a usable SSO session on disk: a non-expired access
@@ -765,17 +818,27 @@ class MenuBarManager: NSObject {
 
         Task {
             do {
+                var signInProfile: String?
                 if let iamProfile = profile as? IAMProfile {
-                    let sourceProfileName = iamProfile.sourceProfile
-                    let allProfiles = ConfigManager.shared.getProfiles()
-                    if let sourceProfile = allProfiles.first(where: { $0.name == sourceProfileName }) as? SSOProfile {
-                        _ = try await CommandRunner.shared.runCommand("aws", args: ["sso", "login", "--profile", sourceProfile.name])
-                    }
+                    signInProfile = (profiles.first(where: { $0.name == iamProfile.sourceProfile }) as? SSOProfile)?.name
                 } else if profile is SSOProfile {
-                    _ = try await CommandRunner.shared.runCommand("aws", args: ["sso", "login", "--profile", profile.name])
+                    signInProfile = profile.name
                 }
 
-                _ = try await CommandRunner.shared.runCommand("aws", args: ["sts", "get-caller-identity", "--profile", profile.name])
+                // A live SSO session mints role credentials without a browser;
+                // sign in only when there isn't one, or it turns out to be dead.
+                var signedIn = false
+                if let signInProfile, !SessionManager.shared.hasLiveSSOSession(for: signInProfile) {
+                    _ = try await CommandRunner.shared.runCommand("aws", args: ["sso", "login", "--profile", signInProfile])
+                    signedIn = true
+                }
+
+                do {
+                    _ = try await CommandRunner.shared.runCommand("aws", args: ["sts", "get-caller-identity", "--profile", profile.name])
+                } catch where signInProfile != nil && !signedIn {
+                    _ = try await CommandRunner.shared.runCommand("aws", args: ["sso", "login", "--profile", signInProfile!])
+                    _ = try await CommandRunner.shared.runCommand("aws", args: ["sts", "get-caller-identity", "--profile", profile.name])
+                }
                 try await Task.sleep(nanoseconds: 200_000_000)
 
                 await MainActor.run {
