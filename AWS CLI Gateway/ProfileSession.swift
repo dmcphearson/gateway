@@ -93,6 +93,8 @@ enum SessionAdoption {
         let name: String
         let sessionLive: Bool
         let hasRoleCredentials: Bool
+        /// Disconnected in Gateway by the person; shown as signed in, never auto-connected.
+        var dismissed: Bool = false
     }
 
     struct Plan: Equatable {
@@ -104,7 +106,7 @@ enum SessionAdoption {
         var plan = Plan()
         var slots = max(0, limit - connected.count)
         for candidate in candidates where candidate.sessionLive && !connected.contains(candidate.name) {
-            if candidate.hasRoleCredentials && slots > 0 {
+            if candidate.hasRoleCredentials && !candidate.dismissed && slots > 0 {
                 plan.connect.append(candidate.name)
                 slots -= 1
             } else {

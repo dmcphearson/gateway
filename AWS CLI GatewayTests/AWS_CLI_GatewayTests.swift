@@ -303,4 +303,31 @@ struct SessionAdoptionTests {
         #expect(plan.connect == ["a"])
         #expect(plan.signedIn == ["b"])
     }
+
+    @Test func dismissedProfilesAreSignedInNotConnected() {
+        let plan = SessionAdoption.plan(
+            [Candidate(name: "dev", sessionLive: true, hasRoleCredentials: true, dismissed: true)],
+            connected: [], limit: 5)
+        #expect(plan.connect.isEmpty)
+        #expect(plan.signedIn == ["dev"])
+    }
+}
+
+struct ProfileHistoryTests {
+    typealias ProfileInfo = ProfileHistoryManager.ProfileInfo
+
+    @Test func decodesHistoryWrittenBeforeDismissal() throws {
+        let json = #"[{"originalName":"dev","id":"1","profileType":"sso","isConnected":true}]"#
+        let profiles = try JSONDecoder().decode([ProfileInfo].self, from: Data(json.utf8))
+        #expect(profiles.first?.isConnected == true)
+        #expect(profiles.first?.isDismissed == false)
+    }
+
+    @Test func dismissalSurvivesSaveAndLoad() throws {
+        var info = ProfileInfo(originalName: "dev")
+        info.isDismissed = true
+        let data = try JSONEncoder().encode([info])
+        let profiles = try JSONDecoder().decode([ProfileInfo].self, from: data)
+        #expect(profiles.first?.isDismissed == true)
+    }
 }
